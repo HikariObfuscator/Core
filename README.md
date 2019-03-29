@@ -1,4 +1,4 @@
-# Headers
+# Core
 Shared Core LLVM Obfuscation Library of [HikariObfuscator](https://github.com/HikariObfuscator/Hikari) . Please refer to the main repo for info and usage.
 
 # License
