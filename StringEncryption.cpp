@@ -76,25 +76,7 @@ struct StringEncryption : public ModulePass {
     return true;
   } // End runOnModule
   void HandleFunction(Function *Func) {
-    /*
-      - Split Original EntryPoint BB into A and C.
-      - Create new BB as Decryption BB between A and C. Adjust the terminators
-      into: A (Alloca a new array containing all)
-              |
-              B(If not decrypted)
-              |
-              C
-    */
     FixFunctionConstantExpr(Func);
-    BasicBlock *A = &(Func->getEntryBlock());
-    BasicBlock *C = A->splitBasicBlock(A->getFirstNonPHIOrDbgOrLifetime());
-    C->setName("PrecedingBlock");
-    BasicBlock *B =
-        BasicBlock::Create(Func->getContext(), "StringDecryptionBB", Func, C);
-    // Change A's terminator to jump to B
-    // We'll add new terminator to jump C later
-    BranchInst *newBr = BranchInst::Create(B);
-    ReplaceInstWithInst(A->getTerminator(), newBr);
     set<GlobalVariable *> Globals;
     set<User *> Users;
     for (BasicBlock &BB : *Func) {
@@ -110,7 +92,6 @@ struct StringEncryption : public ModulePass {
         }
       }
     }
-    IRBuilder<> IRB(A->getFirstNonPHIOrDbgOrLifetime());
     set<GlobalVariable *> rawStrings;
     set<GlobalVariable *> objCStrings;
     map<GlobalVariable *, Constant *> GV2Keys;
@@ -252,6 +233,8 @@ struct StringEncryption : public ModulePass {
           GV->getType()->getAddressSpace());
       old2new[GV] = EncryptedOCGV;
     } // End prepare ObjC new GV
+    if(old2new.empty() || GV2Keys.empty())
+      return;
     // Replace Uses
     for (User *U : Users) {
       for (map<GlobalVariable *, GlobalVariable *>::iterator iter =
@@ -281,6 +264,25 @@ struct StringEncryption : public ModulePass {
       }
     }
     GlobalVariable *StatusGV = encstatus[Func];
+    /*
+      - Split Original EntryPoint BB into A and C.
+      - Create new BB as Decryption BB between A and C. Adjust the terminators
+      into: A (Alloca a new array containing all)
+              |
+              B(If not decrypted)
+              |
+              C
+    */
+    BasicBlock *A = &(Func->getEntryBlock());
+    BasicBlock *C = A->splitBasicBlock(A->getFirstNonPHIOrDbgOrLifetime());
+    C->setName("PrecedingBlock");
+    BasicBlock *B =
+        BasicBlock::Create(Func->getContext(), "StringDecryptionBB", Func, C);
+    // Change A's terminator to jump to B
+    // We'll add new terminator to jump C later
+    BranchInst *newBr = BranchInst::Create(B);
+    ReplaceInstWithInst(A->getTerminator(), newBr);
+    IRBuilder<> IRB(A->getFirstNonPHIOrDbgOrLifetime());
     // Insert DecryptionCode
     HandleDecryptionBlock(B, C, GV2Keys);
     // Add atomic load checking status in A
