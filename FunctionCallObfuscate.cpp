@@ -23,6 +23,9 @@
 using namespace llvm;
 using namespace std;
 using json = nlohmann::json;
+static const int DARWIN_FLAG = 0x2 | 0x8;
+static const int ANDROID64_FLAG = 0x00002 | 0x100;
+static const int ANDROID32_FLAG = 0x0000 | 0x2;
 static cl::opt<string>
     SymbolConfigPath("fcoconfig",
                      cl::desc("FunctionCallObfuscate Configuration Path"),
