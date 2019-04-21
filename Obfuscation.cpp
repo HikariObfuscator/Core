@@ -1,28 +1,5 @@
-/*
-    Copyright (C) 2017 Zhang(https://github.com/Naville/)
-    // Hikari is relicensed from Obfuscator-LLVM and LLVM upstream's permissive NCSA license
-    // to GNU Affero General Public License Version 3 with exceptions listed below.
-    // tl;dr: The obfuscated LLVM IR and/or obfuscated binary is not restricted in anyway,
-    // however any other project containing code from Hikari needs to be open source and licensed under AGPLV3 as well, even for web-based obfuscation services.
-    //
-    // Exceptions:
-    // Anyone who has associated with ByteDance in anyway at any past, current, future time point is prohibited from direct using this piece of software or create any derivative from it
-    //
-    //===----------------------------------------------------------------------===//
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as published
-    by the Free Software Foundation, either version 3 of the License, or
-    any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
-
-    You should have received a copy of the GNU Affero General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+// For open-source license, please refer to [License](https://github.com/HikariObfuscator/Hikari/wiki/License).
+//===----------------------------------------------------------------------===//
 /*
   Hikari 's own "Pass Scheduler".
   Because currently there is no way to add dependency to transform passes
@@ -65,6 +42,39 @@ static cl::opt<bool>
     EnableFunctionWrapper("enable-funcwra", cl::init(false), cl::NotHidden,
                           cl::desc("Enable Function Wrapper."));
 // End Obfuscator Options
+
+static void LoadEnv() {
+ if (getenv("SPLITOBF")) {
+   EnableBasicBlockSplit = true;
+ }
+ if (getenv("SUBOBF")) {
+   EnableSubstitution = true;
+ }
+ if (getenv("ALLOBF")) {
+   EnableAllObfuscation = true;
+ }
+ if (getenv("FCO")) {
+   EnableFunctionCallObfuscate = true;
+ }
+ if (getenv("STRCRY")) {
+   EnableStringEncryption = true;
+ }
+ if (getenv("INDIBRAN")) {
+   EnableIndirectBranching = true;
+ }
+ if (getenv("FUNCWRA")) {
+   EnableFunctionWrapper = true;//Broken
+ }
+ if (getenv("BCFOBF")) {
+   EnableBogusControlFlow = true;
+ }
+ if (getenv("ACDOBF")) {
+   EnableAntiClassDump = true;
+ }
+ if (getenv("CFFOBF")) {
+   EnableFlattening = true;
+ }
+}
 namespace llvm {
 struct Obfuscation : public ModulePass {
   static char ID;
@@ -164,6 +174,7 @@ struct Obfuscation : public ModulePass {
   } // End runOnModule
 };
 ModulePass *createObfuscationPass() {
+  LoadEnv();
   if (AesSeed!=0x1337) {
     cryptoutils->prng_seed(AesSeed);
   }
