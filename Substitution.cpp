@@ -223,6 +223,7 @@ void Substitution::addDoubleNeg(BinaryOperator *bo) {
     // Check signed wrap
     // op->setHasNoSignedWrap(bo->hasNoSignedWrap());
     // op->setHasNoUnsignedWrap(bo->hasNoUnsignedWrap());
+    bo->replaceAllUsesWith(op);
   }
   #ifdef HIKARI_ENABLE_FP
   else {
@@ -230,10 +231,10 @@ void Substitution::addDoubleNeg(BinaryOperator *bo) {
     op2 = BinaryOperator::CreateFNeg(bo->getOperand(1), "", bo);
     op = BinaryOperator::Create(Instruction::FAdd, op, op2, "", bo);
     op = BinaryOperator::CreateFNeg(op, "", bo);
+    bo->replaceAllUsesWith(op);
   }
   #endif
 
-  bo->replaceAllUsesWith(op);
 }
 
 // Implementation of  r = rand (); a = b + r; a = a + c; a = a - r
