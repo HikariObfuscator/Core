@@ -202,6 +202,11 @@ struct FunctionCallObfuscate : public FunctionPass {
     if (toObfuscate(flag, &F, "fco") == false) {
       return false;
     }
+    Triple Tri(F.getParent()->getTargetTriple());
+    if (!Tri.isAndroid() && !Tri.isOSDarwin()) {
+      errs() << "Unsupported Target Triple:"<< F.getParent()->getTargetTriple() << "\n";
+      return false;
+    }
     errs() << "Running FunctionCallObfuscate On " << F.getName() << "\n";
     Module *M = F.getParent();
     FixFunctionConstantExpr(&F);
@@ -264,8 +269,20 @@ struct FunctionCallObfuscate : public FunctionPass {
             IRBuilder<> IRB(EntryBlock, EntryBlock->getFirstInsertionPt());
             vector<Value *> dlopenargs;
             dlopenargs.push_back(Constant::getNullValue(Int8PtrTy));
-            dlopenargs.push_back(
-                ConstantInt::get(Int32Ty, RTLD_NOW | RTLD_GLOBAL));
+             if (Tri.isOSDarwin()) {
+              dlopenargs.push_back(ConstantInt::get(Int32Ty, DARWIN_FLAG));
+            } else if (Tri.isAndroid()) {
+              if (Tri.isArch64Bit()) {
+                dlopenargs.push_back(ConstantInt::get(Int32Ty, ANDROID64_FLAG));
+              } else {
+                dlopenargs.push_back(ConstantInt::get(Int32Ty, ANDROID32_FLAG));
+              }
+
+            } else {
+              errs() << "[FunctionCallObfuscate]Unsupported Target Triple:"
+                         << F.getParent()->getTargetTriple() << "\n";
+              return false;
+            }
             Value *Handle =
                 IRB.CreateCall(dlopen_decl, ArrayRef<Value *>(dlopenargs));
             // Create dlsym call
