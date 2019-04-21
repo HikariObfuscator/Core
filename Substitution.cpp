@@ -207,11 +207,7 @@ void Substitution::addNeg(BinaryOperator *bo) {
     // op->setHasNoUnsignedWrap(bo->hasNoUnsignedWrap());
 
     bo->replaceAllUsesWith(op);
-  } /* else {
-     op = BinaryOperator::CreateFNeg(bo->getOperand(1), "", bo);
-     op = BinaryOperator::Create(Instruction::FSub, bo->getOperand(0), op, "",
-                                 bo);
-   }*/
+  }
 }
 
 // Implementation of a = -(-b + (-c))
@@ -227,12 +223,15 @@ void Substitution::addDoubleNeg(BinaryOperator *bo) {
     // Check signed wrap
     // op->setHasNoSignedWrap(bo->hasNoSignedWrap());
     // op->setHasNoUnsignedWrap(bo->hasNoUnsignedWrap());
-  } else {
+  }
+  #ifdef HIKARI_ENABLE_FP
+  else {
     op = BinaryOperator::CreateFNeg(bo->getOperand(0), "", bo);
     op2 = BinaryOperator::CreateFNeg(bo->getOperand(1), "", bo);
     op = BinaryOperator::Create(Instruction::FAdd, op, op2, "", bo);
     op = BinaryOperator::CreateFNeg(op, "", bo);
   }
+  #endif
 
   bo->replaceAllUsesWith(op);
 }
@@ -309,11 +308,14 @@ void Substitution::subNeg(BinaryOperator *bo) {
     // Check signed wrap
     // op->setHasNoSignedWrap(bo->hasNoSignedWrap());
     // op->setHasNoUnsignedWrap(bo->hasNoUnsignedWrap());
-  } else {
+  }
+  #ifdef HIKARI_ENABLE_FP
+  else {
     op = BinaryOperator::CreateFNeg(bo->getOperand(1), "", bo);
     op = BinaryOperator::Create(Instruction::FAdd, bo->getOperand(0), op, "",
                                 bo);
   }
+  #endif
 
   bo->replaceAllUsesWith(op);
 }

@@ -1,3 +1,5 @@
+set(HIKARI_ENABLE_FP true CACHE BOOL "Enable FloatPoint Related Operation")
+option(HIKARI_ENABLE_FP "Enable FloatPoint Related Operation" ON)
 add_llvm_library(LLVMObfuscation
   FunctionCallObfuscate.cpp
   CryptoUtils.cpp
@@ -20,4 +22,8 @@ execute_process(
   OUTPUT_VARIABLE HIKARI_GIT_COMMIT_HASH
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+IF(HIKARI_ENABLE_FP)
+target_compile_definitions(LLVMObfuscation PRIVATE "-DGIT_COMMIT_HASH=\"${HIKARI_GIT_COMMIT_HASH}\" -DHIKARI_ENABLE_FP")
+ELSE()
 target_compile_definitions(LLVMObfuscation PRIVATE "-DGIT_COMMIT_HASH=\"${HIKARI_GIT_COMMIT_HASH}\"")
+ENDIF()

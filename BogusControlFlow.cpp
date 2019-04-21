@@ -322,8 +322,11 @@ struct BogusControlFlow : public FunctionPass {
     // Preparing a condition..
     // For now, the condition is an always true comparaison between 2 float
     // This will be complicated after the pass (in doFinalization())
-    Value *LHS = ConstantFP::get(Type::getFloatTy(F.getContext()), 1.0);
-    Value *RHS = ConstantFP::get(Type::getFloatTy(F.getContext()), 1.0);
+
+    // We need to use ConstantInt instead of ConstantFP as ConstantFP results in strange dead-loop
+    // when injected into Xcode
+    Value *LHS = ConstantInt::get(Type::getInt32Ty(F.getContext()), 1);
+    Value *RHS = ConstantInt::get(Type::getInt32Ty(F.getContext()), 1);
     DEBUG_WITH_TYPE("gen", errs() << "bcf: Value LHS and RHS created\n");
 
     // The always true condition. End of the first block
@@ -492,6 +495,7 @@ struct BogusControlFlow : public FunctionPass {
           }
         }
         // Binary float
+#ifdef HIKARI_ENABLE_FP
         if (opcode == Instruction::FAdd || opcode == Instruction::FSub ||
             opcode == Instruction::FMul || opcode == Instruction::FDiv ||
             opcode == Instruction::FRem) {
@@ -514,6 +518,7 @@ struct BogusControlFlow : public FunctionPass {
             }
           }
         }
+#endif
         if (opcode == Instruction::ICmp) { // Condition (with int)
           ICmpInst *currentI = (ICmpInst *)(&i);
           switch (llvm::cryptoutils->get_range(3)) { // must be improved
