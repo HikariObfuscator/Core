@@ -330,9 +330,8 @@ struct BogusControlFlow : public FunctionPass {
     DEBUG_WITH_TYPE("gen", errs() << "bcf: Value LHS and RHS created\n");
 
     // The always true condition. End of the first block
-    Twine *var4 = new Twine("condition");
     ICmpInst *condition =
-        new ICmpInst(*basicBlock, ICmpInst::ICMP_EQ, LHS, RHS,"BCFPlaceHolderPred",*var4);
+        new ICmpInst(*basicBlock, ICmpInst::ICMP_EQ, LHS, RHS,"BCFPlaceHolderPred");
     DEBUG_WITH_TYPE("gen", errs() << "bcf: Always true condition created\n");
 
     // Jump to the original basic block if the condition is true or
@@ -366,9 +365,8 @@ struct BogusControlFlow : public FunctionPass {
     // of the altered block.. So we erase the terminator created when splitting.
     originalBB->getTerminator()->eraseFromParent();
     // We add at the end a new always true condition
-    Twine *var6 = new Twine("condition2");
     ICmpInst *condition2 =
-        new ICmpInst(*originalBB, CmpInst::ICMP_EQ, LHS, RHS,"BCFPlaceHolderPred",*var6);
+        new ICmpInst(*originalBB, CmpInst::ICMP_EQ, LHS, RHS,"BCFPlaceHolderPred");
     // BranchInst::Create(originalBBpart2, alteredBB, (Value
     // *)condition2,originalBB);  Do random behavior to avoid pattern
     // recognition This is achieved by jumping to a random BB
