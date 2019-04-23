@@ -332,7 +332,7 @@ struct BogusControlFlow : public FunctionPass {
     // The always true condition. End of the first block
     Twine *var4 = new Twine("condition");
     ICmpInst *condition =
-        new ICmpInst(*basicBlock, ICmpInst::ICMP_TRUE, LHS, RHS, *var4);
+        new ICmpInst(*basicBlock, ICmpInst::ICMP_EQ, LHS, RHS,"BCFPlaceHolderPred",*var4);
     DEBUG_WITH_TYPE("gen", errs() << "bcf: Always true condition created\n");
 
     // Jump to the original basic block if the condition is true or
@@ -368,7 +368,7 @@ struct BogusControlFlow : public FunctionPass {
     // We add at the end a new always true condition
     Twine *var6 = new Twine("condition2");
     ICmpInst *condition2 =
-        new ICmpInst(*originalBB, CmpInst::ICMP_TRUE, LHS, RHS, *var6);
+        new ICmpInst(*originalBB, CmpInst::ICMP_EQ, LHS, RHS,"BCFPlaceHolderPred",*var6);
     // BranchInst::Create(originalBBpart2, alteredBB, (Value
     // *)condition2,originalBB);  Do random behavior to avoid pattern
     // recognition This is achieved by jumping to a random BB
@@ -680,10 +680,10 @@ struct BogusControlFlow : public FunctionPass {
         if (tbb->getOpcode() == Instruction::Br) {
           BranchInst *br = (BranchInst *)(tbb);
           if (br->isConditional()) {
-            FCmpInst *cond = (FCmpInst *)br->getCondition();
+            ICmpInst *cond = (ICmpInst *)br->getCondition();
             unsigned opcode = cond->getOpcode();
-            if (opcode == Instruction::FCmp) {
-              if (cond->getPredicate() == FCmpInst::FCMP_TRUE) {
+            if (opcode == Instruction::ICmp) {
+              if (cond->getPredicate() == ICmpInst::ICMP_EQ && cond->getName().startswith("BCFPlaceHolderPred")) {
                 DEBUG_WITH_TYPE("gen",
                                 errs() << "bcf: an always true predicate !\n");
                 toDelete.push_back(cond); // The condition
