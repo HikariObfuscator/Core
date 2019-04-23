@@ -15,7 +15,6 @@
 #include "llvm/Transforms/Obfuscation/Obfuscation.h"
 #include <algorithm>
 #include <cstdlib>
-#include <dlfcn.h>
 #include <fstream>
 #include <iostream>
 #include <regex>
