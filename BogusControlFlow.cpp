@@ -331,8 +331,8 @@ struct BogusControlFlow : public FunctionPass {
 
     // The always true condition. End of the first block
     Twine *var4 = new Twine("condition");
-    FCmpInst *condition =
-        new FCmpInst(*basicBlock, FCmpInst::FCMP_TRUE, LHS, RHS, *var4);
+    ICmpInst *condition =
+        new ICmpInst(*basicBlock, ICmpInst::ICMP_TRUE, LHS, RHS, *var4);
     DEBUG_WITH_TYPE("gen", errs() << "bcf: Always true condition created\n");
 
     // Jump to the original basic block if the condition is true or
@@ -367,8 +367,8 @@ struct BogusControlFlow : public FunctionPass {
     originalBB->getTerminator()->eraseFromParent();
     // We add at the end a new always true condition
     Twine *var6 = new Twine("condition2");
-    FCmpInst *condition2 =
-        new FCmpInst(*originalBB, CmpInst::FCMP_TRUE, LHS, RHS, *var6);
+    ICmpInst *condition2 =
+        new ICmpInst(*originalBB, CmpInst::ICMP_TRUE, LHS, RHS, *var6);
     // BranchInst::Create(originalBBpart2, alteredBB, (Value
     // *)condition2,originalBB);  Do random behavior to avoid pattern
     // recognition This is achieved by jumping to a random BB
@@ -563,6 +563,7 @@ struct BogusControlFlow : public FunctionPass {
             break;
           }
         }
+    #ifdef HIKARI_ENABLE_FP
         if (opcode == Instruction::FCmp) { // Conditions (with float)
           FCmpInst *currentI = (FCmpInst *)(&i);
           switch (llvm::cryptoutils->get_range(3)) { // must be improved
@@ -607,6 +608,7 @@ struct BogusControlFlow : public FunctionPass {
             break;
           }
         }
+#endif
       }
     }
     // Remove DIs from AlterBB
