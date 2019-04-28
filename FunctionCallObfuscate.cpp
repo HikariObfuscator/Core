@@ -276,7 +276,7 @@ struct FunctionCallObfuscate : public FunctionPass {
             vector<Value *> dlopenargs;
             dlopenargs.push_back(Constant::getNullValue(Int8PtrTy));
              if (Tri.isOSDarwin()) {
-              ddlopen_flag=DARWIN_FLAG;
+              dlopen_flag=DARWIN_FLAG;
             } else if (Tri.isAndroid()) {
               if (Tri.isArch64Bit()) {
                 dlopen_flag=ANDROID64_FLAG;
