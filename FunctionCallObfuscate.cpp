@@ -25,6 +25,10 @@ using json = nlohmann::json;
 static const int DARWIN_FLAG = 0x2 | 0x8;
 static const int ANDROID64_FLAG = 0x00002 | 0x100;
 static const int ANDROID32_FLAG = 0x0000 | 0x2;
+static cl::opt<uint64_t> dlopen_flag(
+    "fco_flag",
+    cl::desc("The value of RTLD_DEFAULT on your platform"),
+    cl::value_desc("value"), cl::init(-1), cl::Optional);
 static cl::opt<string>
     SymbolConfigPath("fcoconfig",
                      cl::desc("FunctionCallObfuscate Configuration Path"),
@@ -272,19 +276,20 @@ struct FunctionCallObfuscate : public FunctionPass {
             vector<Value *> dlopenargs;
             dlopenargs.push_back(Constant::getNullValue(Int8PtrTy));
              if (Tri.isOSDarwin()) {
-              dlopenargs.push_back(ConstantInt::get(Int32Ty, DARWIN_FLAG));
+              ddlopen_flag=DARWIN_FLAG;
             } else if (Tri.isAndroid()) {
               if (Tri.isArch64Bit()) {
-                dlopenargs.push_back(ConstantInt::get(Int32Ty, ANDROID64_FLAG));
+                dlopen_flag=ANDROID64_FLAG;
               } else {
-                dlopenargs.push_back(ConstantInt::get(Int32Ty, ANDROID32_FLAG));
+                dlopen_flag=ANDROID32_FLAG;
               }
 
             } else {
               errs() << "[FunctionCallObfuscate]Unsupported Target Triple:"
                          << F.getParent()->getTargetTriple() << "\n";
-              return false;
+              errs()<<"[FunctionCallObfuscate]Applying Default Signature:"<<dlopen_flag<<"\n";
             }
+            dlopenargs.push_back(ConstantInt::get(Int32Ty, dlopen_flag));
             Value *Handle =
                 IRB.CreateCall(dlopen_decl, ArrayRef<Value *>(dlopenargs));
             // Create dlsym call
