@@ -472,7 +472,6 @@ struct BogusControlFlow : public FunctionPass {
           }
         }
         // Binary float
-#ifdef HIKARI_ENABLE_FP
         if (opcode == Instruction::FAdd || opcode == Instruction::FSub ||
             opcode == Instruction::FMul || opcode == Instruction::FDiv ||
             opcode == Instruction::FRem) {
@@ -495,7 +494,6 @@ struct BogusControlFlow : public FunctionPass {
             }
           }
         }
-#endif
         if (opcode == Instruction::ICmp) { // Condition (with int)
           ICmpInst *currentI = (ICmpInst *)(&i);
           switch (llvm::cryptoutils->get_range(3)) { // must be improved
@@ -540,7 +538,6 @@ struct BogusControlFlow : public FunctionPass {
             break;
           }
         }
-    #ifdef HIKARI_ENABLE_FP
         if (opcode == Instruction::FCmp) { // Conditions (with float)
           FCmpInst *currentI = (FCmpInst *)(&i);
           switch (llvm::cryptoutils->get_range(3)) { // must be improved
@@ -585,7 +582,6 @@ struct BogusControlFlow : public FunctionPass {
             break;
           }
         }
-#endif
       }
     }
     // Remove DIs from AlterBB
