@@ -219,17 +219,21 @@ void Substitution::addDoubleNeg(BinaryOperator *bo) {
     op2 = BinaryOperator::CreateNeg(bo->getOperand(1), "", bo);
     op = BinaryOperator::Create(Instruction::Add, op, op2, "", bo);
     op = BinaryOperator::CreateNeg(op, "", bo);
+
     // Check signed wrap
     // op->setHasNoSignedWrap(bo->hasNoSignedWrap());
     // op->setHasNoUnsignedWrap(bo->hasNoUnsignedWrap());
+    bo->replaceAllUsesWith(op);
   }
+  #ifdef HIKARI_ENABLE_FP
   else {
     op = BinaryOperator::CreateFNeg(bo->getOperand(0), "", bo);
     op2 = BinaryOperator::CreateFNeg(bo->getOperand(1), "", bo);
     op = BinaryOperator::Create(Instruction::FAdd, op, op2, "", bo);
     op = BinaryOperator::CreateFNeg(op, "", bo);
+    bo->replaceAllUsesWith(op);
   }
-  bo->replaceAllUsesWith(op);
+  #endif
 
 }
 
@@ -306,11 +310,13 @@ void Substitution::subNeg(BinaryOperator *bo) {
     // op->setHasNoSignedWrap(bo->hasNoSignedWrap());
     // op->setHasNoUnsignedWrap(bo->hasNoUnsignedWrap());
   }
+  #ifdef HIKARI_ENABLE_FP
   else {
     op = BinaryOperator::CreateFNeg(bo->getOperand(1), "", bo);
     op = BinaryOperator::Create(Instruction::FAdd, bo->getOperand(0), op, "",
                                 bo);
   }
+  #endif
 
   bo->replaceAllUsesWith(op);
 }

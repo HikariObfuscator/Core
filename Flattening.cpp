@@ -3,14 +3,7 @@
 #include "llvm/Transforms/Obfuscation/Obfuscation.h"
 #include "llvm/Transforms/Obfuscation/CryptoUtils.h"
 #include <fcntl.h>
-#include <sys/stat.h>
-
-#define DEBUG_TYPE "flattening"
-
 using namespace llvm;
-
-// Stats
-STATISTIC(Flattened, "Functions flattened");
 
 namespace {
 struct Flattening : public FunctionPass {
@@ -35,9 +28,7 @@ bool Flattening::runOnFunction(Function &F) {
   // Do we obfuscate
   if (toObfuscate(flag, tmp, "fla")) {
     errs() << "Running ControlFlowFlattening On " << F.getName() << "\n";
-    if (flatten(tmp)) {
-      ++Flattened;
-    }
+    flatten(tmp);
   }
 
   return false;
@@ -106,11 +97,12 @@ bool Flattening::flatten(Function *f) {
   }
 
   // Remove jump
-  insert->getTerminator()->eraseFromParent();
+  Instruction* oldTerm=insert->getTerminator();
 
   // Create switch variable and set as it
   switchVar =
-      new AllocaInst(Type::getInt32Ty(f->getContext()), 0, "switchVar", insert);
+      new AllocaInst(Type::getInt32Ty(f->getContext()), 0, "switchVar",oldTerm);
+  oldTerm->eraseFromParent();
   new StoreInst(
       ConstantInt::get(Type::getInt32Ty(f->getContext()),
                        llvm::cryptoutils->scramble32(0, scrambling_key)),

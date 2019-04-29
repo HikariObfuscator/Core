@@ -98,17 +98,6 @@
 #include "llvm/Transforms/Utils/Local.h"
 #include <memory>
 
-// Stats
-#define DEBUG_TYPE "BogusControlFlow"
-STATISTIC(NumFunction, "a. Number of functions in this module");
-STATISTIC(NumTimesOnFunctions, "b. Number of times we run on each function");
-STATISTIC(InitNumBasicBlocks,
-          "c. Initial number of basic blocks in this module");
-STATISTIC(NumModifiedBasicBlocks, "d. Number of modified basic blocks");
-STATISTIC(NumAddedBasicBlocks,
-          "e. Number of added basic blocks in this module");
-STATISTIC(FinalNumBasicBlocks,
-          "f. Final number of basic blocks in this module");
 
 // Options for the pass
 const int defaultObfRate = 70, defaultObfTime = 1;
@@ -198,7 +187,6 @@ struct BogusControlFlow : public FunctionPass {
 
   void bogus(Function &F) {
     // For statistics and debug
-    ++NumFunction;
     int NumBasicBlocks = 0;
     bool firstTime = true; // First time we do the loop in this function
     bool hasBeenModified = false;
@@ -222,7 +210,6 @@ struct BogusControlFlow : public FunctionPass {
                                  << defaultObfTime << " \n");
       ObfTimes = defaultObfTime;
     }
-    NumTimesOnFunctions = ObfTimes;
     int NumObfTimes = ObfTimes;
 
     // Real begining of the pass
@@ -249,9 +236,6 @@ struct BogusControlFlow : public FunctionPass {
           DEBUG_WITH_TYPE("opt", errs() << "bcf: Block " << NumBasicBlocks
                                         << " selected. \n");
           hasBeenModified = true;
-          ++NumModifiedBasicBlocks;
-          NumAddedBasicBlocks += 3;
-          FinalNumBasicBlocks += 3;
           // Add bogus flow to the given Basic Block (see description)
           BasicBlock *basicBlock = basicBlocks.front();
           addBogusFlow(basicBlock, F);
@@ -261,11 +245,6 @@ struct BogusControlFlow : public FunctionPass {
         }
         // remove the block from the list
         basicBlocks.pop_front();
-
-        if (firstTime) { // first time we iterate on this function
-          ++InitNumBasicBlocks;
-          ++FinalNumBasicBlocks;
-        }
       } // end of while(!basicBlocks.empty())
       DEBUG_WITH_TYPE("gen",
                       errs() << "bcf: End of function " << F.getName() << "\n");
@@ -493,6 +472,7 @@ struct BogusControlFlow : public FunctionPass {
           }
         }
         // Binary float
+#ifdef HIKARI_ENABLE_FP
         if (opcode == Instruction::FAdd || opcode == Instruction::FSub ||
             opcode == Instruction::FMul || opcode == Instruction::FDiv ||
             opcode == Instruction::FRem) {
@@ -515,6 +495,7 @@ struct BogusControlFlow : public FunctionPass {
             }
           }
         }
+#endif
         if (opcode == Instruction::ICmp) { // Condition (with int)
           ICmpInst *currentI = (ICmpInst *)(&i);
           switch (llvm::cryptoutils->get_range(3)) { // must be improved
@@ -559,6 +540,7 @@ struct BogusControlFlow : public FunctionPass {
             break;
           }
         }
+    #ifdef HIKARI_ENABLE_FP
         if (opcode == Instruction::FCmp) { // Conditions (with float)
           FCmpInst *currentI = (FCmpInst *)(&i);
           switch (llvm::cryptoutils->get_range(3)) { // must be improved
@@ -603,6 +585,7 @@ struct BogusControlFlow : public FunctionPass {
             break;
           }
         }
+#endif
       }
     }
     // Remove DIs from AlterBB
