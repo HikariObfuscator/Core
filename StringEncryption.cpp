@@ -309,6 +309,9 @@ struct StringEncryption : public ModulePass {
     for (map<GlobalVariable *, pair<Constant *, GlobalVariable *>>::iterator iter = GV2Keys.begin();
          iter != GV2Keys.end(); ++iter) {
       ConstantDataArray *CastedCDA = cast<ConstantDataArray>(iter->second.first);
+      // Prevent optimization of encrypted data
+      appendToCompilerUsed(*iter->second.second->getParent(),
+                           {iter->second.second});
       // Element-By-Element XOR so the fucking verifier won't complain
       // Also, this hides keys
       for (unsigned i = 0; i < CastedCDA->getType()->getNumElements(); i++) {
